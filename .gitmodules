@@ -1,0 +1,3 @@
+[submodule "config/nginx-badbot-blocker"]
+	path = config/nginx-badbot-blocker
+	url = https://github.com/mariusv/nginx-badbot-blocker.git
