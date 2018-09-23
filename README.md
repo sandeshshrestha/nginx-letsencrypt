@@ -1,6 +1,11 @@
 # NGINX reverse proxy with letsencrypt
-It will auto generate SSL certificate using https://letsencrypt.org and setup cron job to auto update the certificates.
+It does the following..
 
+* Install 'bot blocker' https://github.com/mariusv/nginx-badbot-blocker
+* Generate and configure SSL certificate https://letsencrypt.org
+* Setup cron job to auto update certificates
+
+### Example
 ```bash
 mkdir $HOME/nginx-test
 echo '
@@ -31,6 +36,3 @@ Config string that describe proxy rules
  - extra_config
    - Some text that will be added on nginx conf.
    - It must be valid nginx confix syntax
-
-
-
