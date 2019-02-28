@@ -51,6 +51,7 @@ server {
 	resolver_timeout 5s;
 
 	location /.well-known {
+		auth_basic off;
 		alias /var/www/%s/.well-known;
 	}
 

@@ -10,6 +10,7 @@ server {
 	client_max_body_size 10G;
 
 	location /.well-known {
+		auth_basic off;
 		alias /var/www/%s/.well-known;
 	}
 
