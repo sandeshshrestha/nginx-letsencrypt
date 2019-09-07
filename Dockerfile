@@ -1,19 +1,14 @@
-FROM debian:stable
+FROM nginx:alpine
 
 MAINTAINER Sandesh Shrestha <mail@sandeshshrestha.com>
 
-# Install Required Softwares
-RUN apt update                                                                  && \
-    apt install -y vim nginx python-certbot-nginx cron git apache2-utils        && \
-    mkdir -p /app                                                               && \
-    (echo "0 1 * * * /app/src/cron.sh") | crontab -                             && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR "/app"
 
 VOLUME ["/app/config"]
 
-ENV CERTBOT_ARGS ""
-
-WORKDIR "/app"
+RUN apk add --update --no-cache certbot jq                                && \
+    rm -rf /var/cache/apk/*                                               && \
+    (echo "0 1 * * * /app/src/cron.sh") | crontab -
 
 # Move all executables and config files
 ADD src ./src

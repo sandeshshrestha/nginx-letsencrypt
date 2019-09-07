@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-python /app/src/generate_nginx_config.py
+sh /app/src/generate_nginx_config.sh
 nginx -g 'daemon off;'

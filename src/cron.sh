@@ -1,3 +1,3 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-certbot renew --post-hook "service nginx restart"
+certbot renew --post-hook "nginx -s reload"

@@ -1,0 +1,9 @@
+
+[
+   {
+      "url": "example.com",
+      "proxy": "https://192.168.0.10:8080",
+      "email": "mail@example.com",
+      "https": false
+   }
+]
