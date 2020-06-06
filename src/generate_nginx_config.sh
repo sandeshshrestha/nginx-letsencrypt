@@ -10,8 +10,7 @@ fi
 mkdir /etc/nginx/generated.conf.d
 
 INPUT_FILE_CONTENT=$(cat $INPUT_FILE)
-OUTPUT_FILE="/etc/nginx/generated.conf.d/nginx-letsencrypt.conf"
-TEMP_OUTPUT_FILE="/tmp/nginx-letsencrypt.conf"
+OUTPUT_FILE_DIR="/etc/nginx/generated.conf.d"
 
 printf "\n- Stopping nginx\n"
 nginx -s stop
@@ -19,37 +18,24 @@ nginx -s stop
 printf "\n- Received following configs\n"
 echo "$INPUT_FILE_CONTENT" | jq -r .
 
-# if file is not there we are running it for the first time.
-# So We need to create basic config for all site where all http points to its respective proxy
-# It will be required while authenticating with certbot
-if [ -f "$OUTPUT_FILE" ]; then
-	printf "\n- Initial config found.\n"
-else
-	# Generate basic nginx config
-	printf "\n- Initial config not found. (Creating)\n"
-	rm $TEMP_OUTPUT_FILE
-	touch $TEMP_OUTPUT_FILE
-	for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
-		url=$(echo "$site" | base64 -d | jq -r '.url')
-		proxy=$(echo "$site" | base64 -d | jq -r '.proxy')
+for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
+  url=$(echo "$site" | base64 -d | jq -r '.url')
+  proxy=$(echo "$site" | base64 -d | jq -r '.proxy')
 
-		mkdir -p "/var/www/$url/.well-known"
-
-		sh /app/src/getBasic.sh "$url" "$proxy" >> $TEMP_OUTPUT_FILE
-	done
-
-	# Save the generated config into file
-	printf "\n- Created following initial config\n"
-	mv $TEMP_OUTPUT_FILE $OUTPUT_FILE
-	cat $OUTPUT_FILE;
-fi
+  if [[ -f "$OUTPUT_FILE_DIR/$url.http.conf" || -f "$OUTPUT_FILE_DIR/$url.https.conf" ]]; then
+    # We do not want to generate if the nginx config already exists
+	  printf "\n- Nginx config already found for $url.\n"
+  else
+    printf "\n- Created HTTP NGINX config for %s\n" "$url"
+    mkdir -p "/var/www/$url/.well-known"
+    sh /app/src/getBasic.sh "$url" "$proxy" >> "$OUTPUT_FILE_DIR/$url.http.conf"
+  fi
+done
 
 printf "\n- Starting nginx\n"
 nginx
 
 # Generate ssl certificate and change nginx conig
-rm $TEMP_OUTPUT_FILE
-touch $TEMP_OUTPUT_FILE
 for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
 	url=$(echo "$site" | base64 -d | jq -r '.url')
 	proxy=$(echo "$site" | base64 -d | jq -r '.proxy')
@@ -64,29 +50,33 @@ for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
 	printf "\n- Processing %s -> %s\n" "$url" "$proxy"
 
 	if [ "$https" = true ]; then
-		if [ -f "/etc/letsencrypt/live/$url/fullchain.pem" ]; then
-			printf "\n- Certificate already exists for %s\n" "$url"
-			sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> $TEMP_OUTPUT_FILE
-		else
-			# Proxy Reachable
-			printf "\n- Creating new certificate for %s\n" "$url"
-			certbot certonly --webroot -w "/var/www/$url" -d "$url" -m "$email" --agree-tos --non-interactive
-			if [ $? -eq 0 ]; then
-				printf "\n- Created certificate for %s\n" "$url"
-				sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> $TEMP_OUTPUT_FILE
-			else
-				printf "\n- Failed to create certificate for %s\n" "$url"
-				sh /app/src/getBasic.sh "$url" "$proxy" >> $TEMP_OUTPUT_FILE
-			fi
-		fi
-	else
-		sh /app/src/getBasic.sh "$url" "$proxy" >> $TEMP_OUTPUT_FILE
-	fi
-done
+    if [[ -f "$OUTPUT_FILE_DIR/$url.https.conf" && -f "/etc/letsencrypt/live/$url/fullchain.pem" ]]; then
+      printf "\n- Nginx config and certificate already exists for $url.\n"
+    else
+      if [[ -f "/etc/letsencrypt/live/$url/fullchain.pem" ]]; then
+        printf "\n- Certificate already exists for %s\n" "$url"
+      else
+        # Proxy Reachable
+        printf "\n- Creating new certificate for %s\n" "$url"
+        certbot certonly --webroot -w "/var/www/$url" -d "$url" -m "$email" --agree-tos --non-interactive
 
-printf "\n- Created following final config\n"
-mv $TEMP_OUTPUT_FILE $OUTPUT_FILE
-cat $OUTPUT_FILE;
+        if [ $? -eq 0 ]; then
+          printf "\n- Created certificate for %s\n" "$url"
+        else
+          printf "\n- Failed to create certificate for %s\n" "$url"
+        fi
+      fi
+
+      if [[ -f "$OUTPUT_FILE_DIR/$url.https.conf" ]]; then
+        printf "\n- HTTPS NGINX config already exists for %s\n" "$url"
+      else
+        printf "\n- Created HTTPS NGINX config for %s\n" "$url"
+        sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> "$OUTPUT_FILE_DIR/$url.https.conf"
+        rm "$OUTPUT_FILE_DIR/$url.http.conf"
+      fi
+    fi
+  fi
+done
 
 # Stop nginx
 printf "\n- Stopping nginx\n"

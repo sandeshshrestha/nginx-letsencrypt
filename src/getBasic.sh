@@ -18,7 +18,7 @@ server {
 	location / {
     proxy_redirect   off;
     proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Real-IP \$remote_addr;
 		proxy_pass       $PROXY;
     proxy_buffering    off;
     proxy_buffer_size  128k;
