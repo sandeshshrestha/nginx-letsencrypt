@@ -28,6 +28,10 @@ server {
       expires 120d;
       add_header Pragma public;
       add_header Cache-Control \"public\";
+      proxy_redirect   off;
+      proxy_set_header Host \$host;
+      proxy_set_header X-Real-IP \$remote_addr;
+      proxy_pass       $PROXY;
     }
 	}
 }
