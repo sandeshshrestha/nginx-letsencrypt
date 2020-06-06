@@ -7,8 +7,10 @@ if [ ! -f "$INPUT_FILE" ]; then
 	exit 1;
 fi
 
+mkdir /etc/nginx/generated.conf.d
+
 INPUT_FILE_CONTENT=$(cat $INPUT_FILE)
-OUTPUT_FILE="/etc/nginx/conf.d/nginx-letsencrypt.conf"
+OUTPUT_FILE="/etc/nginx/generated.conf.d/nginx-letsencrypt.conf"
 TEMP_OUTPUT_FILE="/tmp/nginx-letsencrypt.conf"
 
 printf "\n- Stopping nginx\n"

@@ -4,7 +4,7 @@ MAINTAINER Sandesh Shrestha <mail@sandeshshrestha.com>
 
 WORKDIR "/app"
 
-VOLUME ["/app/config"]
+VOLUME ["/app/config", "/etc/nginx/generated.conf.d", "/etc/letsencrypt"]
 
 RUN apk add --update --no-cache certbot-nginx jq                                && \
     rm -rf /var/cache/apk/*                                               && \
