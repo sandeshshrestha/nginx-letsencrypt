@@ -61,7 +61,6 @@ for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
         printf "\n- Created HTTPS NGINX config for %s\n" "$url"
         sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> "$OUTPUT_FILE_DIR/$url.https.conf"
         rm "$OUTPUT_FILE_DIR/$url.http.conf"
-        else
       else
         # Proxy Reachable
         printf "\n- Creating new certificate for %s\n" "$url"
