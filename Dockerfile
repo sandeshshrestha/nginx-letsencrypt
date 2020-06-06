@@ -6,7 +6,7 @@ WORKDIR "/app"
 
 VOLUME ["/app/config"]
 
-RUN apk add --update --no-cache certbot jq                                && \
+RUN apk add --update --no-cache certbot-nginx jq                                && \
     rm -rf /var/cache/apk/*                                               && \
     (echo "0 1 * * * /app/src/cron.sh") | crontab -
 
