@@ -7,7 +7,9 @@ It does the following..
 
 ### Example
 ```bash
-mkdir $HOME/nginx-test
+mkdir -p $HOME/nginx-test/config
+mkdir -p $HOME/nginx-test/nginx-config
+mkdir -p $HOME/nginx-test/certificate
 echo '
 [
    {
@@ -18,7 +20,7 @@ echo '
       "extra_config": "\\n#Some extra config\\n"
    }
 ]' > $HOME/nginx-test/nginx.json
-docker run -d -p 80:80 -p 443:443 -v $HOME/nginx-test:/app/config sandeshshrestha/nginx-letsencrypt
+docker run -d -p 80:80 -p 443:443 -v $HOME/nginx-test/config:/app/config -v $HOME/nginx-test/nginx-config:/etc/nginx/generated.conf.d -v $HOME/nginx-test/certificate:/etc/letsencrypt sandeshshrestha/nginx-letsencrypt
 ```
 
 #### /app/config/nginx.json
