@@ -18,6 +18,7 @@ nginx -s stop
 printf "\n- Received following configs\n"
 echo "$INPUT_FILE_CONTENT" | jq -r .
 
+# This for loop generates basic nginx config needed for certbot to validate the domain to create a certificate
 for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
   url=$(echo "$site" | base64 -d | jq -r '.url')
   proxy=$(echo "$site" | base64 -d | jq -r '.proxy')
@@ -55,6 +56,12 @@ for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
     else
       if [[ -f "/etc/letsencrypt/live/$url/fullchain.pem" ]]; then
         printf "\n- Certificate already exists for %s\n" "$url"
+
+        # If the certificate is there it means the config is not there because of the if statement on line 54, so we are creating it.
+        printf "\n- Created HTTPS NGINX config for %s\n" "$url"
+        sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> "$OUTPUT_FILE_DIR/$url.https.conf"
+        rm "$OUTPUT_FILE_DIR/$url.http.conf"
+        else
       else
         # Proxy Reachable
         printf "\n- Creating new certificate for %s\n" "$url"
@@ -62,17 +69,12 @@ for site in $(echo "$INPUT_FILE_CONTENT" | jq -r '.[] | @base64'); do
 
         if [ $? -eq 0 ]; then
           printf "\n- Created certificate for %s\n" "$url"
+          printf "\n- Created HTTPS NGINX config for %s\n" "$url"
+          sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> "$OUTPUT_FILE_DIR/$url.https.conf"
+          rm "$OUTPUT_FILE_DIR/$url.http.conf"
         else
           printf "\n- Failed to create certificate for %s\n" "$url"
         fi
-      fi
-
-      if [[ -f "$OUTPUT_FILE_DIR/$url.https.conf" ]]; then
-        printf "\n- HTTPS NGINX config already exists for %s\n" "$url"
-      else
-        printf "\n- Created HTTPS NGINX config for %s\n" "$url"
-        sh /app/src/getExtended.sh "$url" "$proxy" "$extra_config" >> "$OUTPUT_FILE_DIR/$url.https.conf"
-        rm "$OUTPUT_FILE_DIR/$url.http.conf"
       fi
     fi
   fi
