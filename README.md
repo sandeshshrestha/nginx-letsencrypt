@@ -19,7 +19,7 @@ echo '
       "https": false,
       "extra_config": "\\n#Some extra config\\n"
    }
-]' > $HOME/nginx-test/nginx.json
+]' > $HOME/nginx-test/config/nginx.json
 docker run -d -p 80:80 -p 443:443 -v $HOME/nginx-test/config:/app/config -v $HOME/nginx-test/nginx-config:/etc/nginx/generated.conf.d -v $HOME/nginx-test/certificate:/etc/letsencrypt sandeshshrestha/nginx-letsencrypt
 ```
 
