@@ -1,6 +1,7 @@
 FROM nginx:alpine
 
-MAINTAINER Sandesh Shrestha <mail@sandeshshrestha.com>
+LABEL org.opencontainers.image.authors="Sandesh Shrestha <mail@sandeshshrestha.com>"
+
 
 WORKDIR "/app"
 
